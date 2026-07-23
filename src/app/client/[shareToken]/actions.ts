@@ -2,7 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 
+import { DEMO_MODE } from "@/lib/demo/config";
+import { findRecommendationProjectId, insertComment, setRecommendationStatus, store } from "@/lib/demo/store";
 import { createServiceRoleClient } from "@/lib/supabase/server";
+
+function assertDemoRecommendationBelongsToProject(recommendationId: string, shareToken: string) {
+  const project = store.projects.find((p) => p.share_token === shareToken);
+  if (!project) throw new Error("Invalid review link.");
+  const projectId = findRecommendationProjectId(recommendationId);
+  if (!projectId || projectId !== project.id) throw new Error("Recommendation not found for this project.");
+}
 
 async function assertRecommendationBelongsToProject(recommendationId: string, shareToken: string) {
   const supabase = createServiceRoleClient();
@@ -27,6 +36,13 @@ export async function clientSetRecommendationStatus(
   recommendationId: string,
   status: "Approved" | "Rejected"
 ) {
+  if (DEMO_MODE) {
+    assertDemoRecommendationBelongsToProject(recommendationId, shareToken);
+    setRecommendationStatus(recommendationId, status);
+    revalidatePath(`/client/${shareToken}`);
+    return;
+  }
+
   const supabase = await assertRecommendationBelongsToProject(recommendationId, shareToken);
   const { error } = await supabase.from("recommendations").update({ status }).eq("id", recommendationId);
   if (error) throw new Error(error.message);
@@ -40,6 +56,14 @@ export async function clientAddComment(
   comment: string
 ) {
   if (!userName.trim() || !comment.trim()) throw new Error("Please add your name and a comment.");
+
+  if (DEMO_MODE) {
+    assertDemoRecommendationBelongsToProject(recommendationId, shareToken);
+    insertComment(recommendationId, userName.trim(), comment.trim(), "client");
+    revalidatePath(`/client/${shareToken}`);
+    return;
+  }
+
   const supabase = await assertRecommendationBelongsToProject(recommendationId, shareToken);
   const { error } = await supabase
     .from("comments")

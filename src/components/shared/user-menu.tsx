@@ -1,7 +1,8 @@
 "use client";
 
 import { useTransition } from "react";
-import { LogOut, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { LogOut, Loader2, RotateCcw } from "lucide-react";
 
 import { signOut } from "@/app/login/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -14,6 +15,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { DEMO_MODE } from "@/lib/demo/config";
+import { resetDemoData } from "@/lib/demo/actions";
 
 function initials(name: string) {
   return name
@@ -25,7 +28,9 @@ function initials(name: string) {
 }
 
 export function UserMenu({ name, email }: { name: string; email: string }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [isResetting, startReset] = useTransition();
 
   return (
     <DropdownMenu>
@@ -43,6 +48,20 @@ export function UserMenu({ name, email }: { name: string; email: string }) {
           <p className="truncate text-xs font-normal text-muted-foreground">{email}</p>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {DEMO_MODE && (
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault();
+              startReset(async () => {
+                await resetDemoData();
+                router.refresh();
+              });
+            }}
+          >
+            {isResetting ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+            Reset demo data
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem
           className="text-destructive focus:text-destructive"
           onSelect={(e) => {

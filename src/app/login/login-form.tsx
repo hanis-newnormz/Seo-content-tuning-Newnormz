@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DEMO_MODE } from "@/lib/demo/config";
 
 export function LoginForm() {
   const searchParams = useSearchParams();
@@ -39,6 +40,12 @@ export function LoginForm() {
           Sign in to your agency workspace to manage SEO review projects.
         </p>
       </div>
+
+      {DEMO_MODE && (
+        <p className="rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-center text-sm text-warning">
+          Demo mode is on — any email and password will sign you in with sample data.
+        </p>
+      )}
 
       <Tabs value={mode} onValueChange={(v) => setMode(v as "login" | "signup")} className="w-full">
         <TabsList className="grid w-full grid-cols-2">

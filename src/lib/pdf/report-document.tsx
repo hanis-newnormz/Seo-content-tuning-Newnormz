@@ -62,7 +62,25 @@ const styles = StyleSheet.create({
   currentCol: { backgroundColor: "#f1f5f9" },
   recommendedCol: { backgroundColor: "#ecfdf5" },
   footer: { position: "absolute", bottom: 24, left: 40, right: 40, fontSize: 8, color: COLORS.muted, textAlign: "center" },
+  screenshotPlaceholder: {
+    width: "100%",
+    height: 140,
+    marginBottom: 12,
+    borderRadius: 4,
+    backgroundColor: "#f1f5f9",
+    border: `1px dashed ${COLORS.border}`,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  screenshotPlaceholderText: { fontSize: 9, color: COLORS.muted },
 });
+
+// react-pdf's <Image> only supports raster formats (PNG/JPEG/WebP) — the demo
+// data store seeds SVG data URIs, which render as a placeholder box instead.
+function isRasterImageSrc(src: string) {
+  return /^data:image\/(png|jpe?g|webp)/i.test(src) || (/^https?:\/\//i.test(src) && !/\.svg(\?|$)/i.test(src));
+}
 
 interface ReportPage extends PageRow {
   recommendations: Recommendation[];
@@ -105,9 +123,14 @@ export function ReportDocument({ project, pages }: { project: Project; pages: Re
           </View>
 
           <Text style={styles.pageSectionTitle}>{page.page_name}</Text>
-          {page.screenshot_url && (
+          {page.screenshot_url && isRasterImageSrc(page.screenshot_url) && (
             // eslint-disable-next-line jsx-a11y/alt-text
             <Image style={styles.screenshot} src={page.screenshot_url} />
+          )}
+          {page.screenshot_url && !isRasterImageSrc(page.screenshot_url) && (
+            <View style={styles.screenshotPlaceholder}>
+              <Text style={styles.screenshotPlaceholderText}>Screenshot preview available in the web app</Text>
+            </View>
           )}
 
           {page.recommendations.length === 0 ? (

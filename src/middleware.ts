@@ -1,8 +1,10 @@
-import { type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
+import { DEMO_MODE } from "@/lib/demo/config";
 import { updateSession } from "@/lib/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
+  if (DEMO_MODE) return NextResponse.next();
   return updateSession(request);
 }
 

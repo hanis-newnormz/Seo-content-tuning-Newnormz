@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 
+import { DEMO_MODE } from "@/lib/demo/config";
 import { createClient } from "@/lib/supabase/server";
 
 export interface AuthActionState {
@@ -9,9 +10,14 @@ export interface AuthActionState {
 }
 
 export async function signIn(_prevState: AuthActionState, formData: FormData): Promise<AuthActionState> {
+  const redirectTo = String(formData.get("redirectTo") ?? "/dashboard");
+
+  if (DEMO_MODE) {
+    redirect(redirectTo || "/dashboard");
+  }
+
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  const redirectTo = String(formData.get("redirectTo") ?? "/dashboard");
 
   if (!email || !password) {
     return { error: "Please enter your email and password." };
@@ -28,6 +34,10 @@ export async function signIn(_prevState: AuthActionState, formData: FormData): P
 }
 
 export async function signUp(_prevState: AuthActionState, formData: FormData): Promise<AuthActionState> {
+  if (DEMO_MODE) {
+    redirect("/dashboard");
+  }
+
   const fullName = String(formData.get("fullName") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
@@ -54,6 +64,10 @@ export async function signUp(_prevState: AuthActionState, formData: FormData): P
 }
 
 export async function signOut() {
+  if (DEMO_MODE) {
+    redirect("/login");
+  }
+
   const supabase = createClient();
   await supabase.auth.signOut();
   redirect("/login");

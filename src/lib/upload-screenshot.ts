@@ -1,6 +1,20 @@
+import { DEMO_MODE } from "@/lib/demo/config";
 import { createClient } from "@/lib/supabase/client";
 
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error ?? new Error("Could not read file."));
+    reader.readAsDataURL(file);
+  });
+}
+
 export async function uploadScreenshot(projectId: string, file: File): Promise<string> {
+  if (DEMO_MODE) {
+    return fileToDataUrl(file);
+  }
+
   const supabase = createClient();
   const extension = file.name.split(".").pop() || "png";
   const path = `${projectId}/${crypto.randomUUID()}.${extension}`;
