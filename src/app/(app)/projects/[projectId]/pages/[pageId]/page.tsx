@@ -7,6 +7,10 @@ import { Button } from "@/components/ui/button";
 import { getPageWithRecommendations } from "@/lib/data";
 import type { Annotation, Comment, Recommendation } from "@/lib/supabase/database.types";
 
+// The "Analyze with AI" server action makes two sequential, research-backed
+// Claude calls and can take well over the default 10s function timeout.
+export const maxDuration = 120;
+
 function stripNestedRelations(rec: Recommendation & { annotations: Annotation[]; comments: Comment[] }): Recommendation {
   const rest: Partial<typeof rec> = { ...rec };
   delete rest.annotations;
