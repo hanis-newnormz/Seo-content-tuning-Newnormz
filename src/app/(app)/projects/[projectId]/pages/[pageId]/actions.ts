@@ -2,6 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 
+import { DEMO_MODE } from "@/lib/demo/config";
+import {
+  editRecommendation,
+  insertAnnotation,
+  insertComment,
+  insertRecommendation,
+  moveAnnotation,
+  removeAnnotation,
+  removeRecommendation,
+  setRecommendationStatus,
+} from "@/lib/demo/store";
 import { createClient } from "@/lib/supabase/server";
 import type {
   RecommendationCategory,
@@ -22,6 +33,8 @@ export interface RecommendationInput {
 }
 
 export async function createRecommendation(pageId: string, input: RecommendationInput) {
+  if (DEMO_MODE) return insertRecommendation(pageId, input);
+
   const supabase = createClient();
   const {
     data: { user },
@@ -50,6 +63,8 @@ export async function createRecommendation(pageId: string, input: Recommendation
 }
 
 export async function updateRecommendation(recommendationId: string, input: RecommendationInput) {
+  if (DEMO_MODE) return editRecommendation(recommendationId, input);
+
   const supabase = createClient();
   const { data, error } = await supabase
     .from("recommendations")
@@ -73,12 +88,23 @@ export async function updateRecommendation(recommendationId: string, input: Reco
 }
 
 export async function updateRecommendationStatus(recommendationId: string, status: RecommendationStatus) {
+  if (DEMO_MODE) {
+    setRecommendationStatus(recommendationId, status);
+    return;
+  }
+
   const supabase = createClient();
   const { error } = await supabase.from("recommendations").update({ status }).eq("id", recommendationId);
   if (error) throw new Error(error.message);
 }
 
 export async function deleteRecommendation(pageId: string, recommendationId: string) {
+  if (DEMO_MODE) {
+    removeRecommendation(recommendationId);
+    revalidatePath(`/projects`);
+    return { pageId };
+  }
+
   const supabase = createClient();
   const { error } = await supabase.from("recommendations").delete().eq("id", recommendationId);
   if (error) throw new Error(error.message);
@@ -93,6 +119,8 @@ export async function createAnnotation(input: {
   y: number;
   sectionName: string;
 }) {
+  if (DEMO_MODE) return insertAnnotation(input);
+
   const supabase = createClient();
   const { data, error } = await supabase
     .from("annotations")
@@ -111,6 +139,11 @@ export async function createAnnotation(input: {
 }
 
 export async function updateAnnotationPosition(annotationId: string, x: number, y: number) {
+  if (DEMO_MODE) {
+    moveAnnotation(annotationId, x, y);
+    return;
+  }
+
   const supabase = createClient();
   const { error } = await supabase
     .from("annotations")
@@ -120,12 +153,19 @@ export async function updateAnnotationPosition(annotationId: string, x: number, 
 }
 
 export async function deleteAnnotation(annotationId: string) {
+  if (DEMO_MODE) {
+    removeAnnotation(annotationId);
+    return;
+  }
+
   const supabase = createClient();
   const { error } = await supabase.from("annotations").delete().eq("id", annotationId);
   if (error) throw new Error(error.message);
 }
 
 export async function addAgencyComment(recommendationId: string, userName: string, comment: string) {
+  if (DEMO_MODE) return insertComment(recommendationId, userName, comment, "agency");
+
   const supabase = createClient();
   const { data, error } = await supabase
     .from("comments")

@@ -9,6 +9,25 @@ a review, presentation, and approval tool: upload a screenshot of a page, pin
 recommendations directly onto it, and share a client-facing link where the
 client can approve, request changes, or comment.
 
+## Demo mode (default, for now)
+
+`DEMO_MODE` in [`src/lib/demo/config.ts`](./src/lib/demo/config.ts) is currently `true`. While it's on:
+
+- **No Supabase project or environment variables are required.** Auth, storage, and the database
+  are all replaced by an in-memory store (`src/lib/demo/store.ts`) seeded with two sample projects
+  (`ABC International School` and `Sunrise Café`).
+- `/login` accepts **any** email/password and drops you straight into the dashboard.
+- Uploading a screenshot on the "Add Page" dialog stores it as a data URL instead of uploading to
+  Supabase Storage — no network call happens.
+- The client share links `/client/demo-school-review` and `/client/demo-cafe-review` work out of the
+  box.
+- Data lives only in server memory for the life of the dev process (it resets on server restart, or
+  any time you edit `src/lib/demo/store.ts`). Use **Reset demo data** in the user menu (top right) to
+  restore the original seed data at any time without restarting the server.
+
+To switch back to a real Supabase backend, set `DEMO_MODE = false` in `src/lib/demo/config.ts` and
+follow the setup steps below.
+
 ## Tech stack
 
 - **Frontend:** Next.js 14 (App Router), TypeScript, Tailwind CSS, shadcn/ui (hand-installed — the

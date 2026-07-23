@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { DEMO_MODE } from "@/lib/demo/config";
+import { insertProject, removeProject } from "@/lib/demo/store";
 import { createClient } from "@/lib/supabase/server";
 
 export interface ProjectActionState {
@@ -27,32 +29,46 @@ export async function createProject(
     .map((k) => k.trim())
     .filter(Boolean);
 
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let projectId: string;
 
-  const { data, error } = await supabase
-    .from("projects")
-    .insert({
-      client_name: clientName,
-      website_url: websiteUrl,
-      project_name: projectName,
-      target_keywords: targetKeywords,
-      created_by: user?.id ?? null,
-    })
-    .select("id")
-    .single();
+  if (DEMO_MODE) {
+    const project = insertProject({ clientName, websiteUrl, projectName, targetKeywords });
+    projectId = project.id;
+  } else {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  if (error) {
-    return { error: error.message };
+    const { data, error } = await supabase
+      .from("projects")
+      .insert({
+        client_name: clientName,
+        website_url: websiteUrl,
+        project_name: projectName,
+        target_keywords: targetKeywords,
+        created_by: user?.id ?? null,
+      })
+      .select("id")
+      .single();
+
+    if (error) {
+      return { error: error.message };
+    }
+    projectId = data.id;
   }
 
   revalidatePath("/dashboard");
-  redirect(`/projects/${data.id}`);
+  redirect(`/projects/${projectId}`);
 }
 
 export async function deleteProject(projectId: string) {
+  if (DEMO_MODE) {
+    removeProject(projectId);
+    revalidatePath("/dashboard");
+    return;
+  }
+
   const supabase = createClient();
   const { error } = await supabase.from("projects").delete().eq("id", projectId);
   if (error) throw new Error(error.message);

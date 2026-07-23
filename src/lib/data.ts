@@ -1,5 +1,13 @@
 import "server-only";
 
+import { DEMO_MODE } from "@/lib/demo/config";
+import {
+  getPageWithRecommendationsData,
+  getProjectByShareTokenData,
+  getProjectForExportData,
+  getProjectWithPagesData,
+  listProjectsWithStats,
+} from "@/lib/demo/store";
 import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import type {
   Annotation,
@@ -21,6 +29,8 @@ type ProjectPagesEmbed = Project & {
 };
 
 export async function getProjectsWithStats(): Promise<ProjectWithStats[]> {
+  if (DEMO_MODE) return listProjectsWithStats();
+
   const supabase = createClient();
   const { data, error } = await supabase
     .from("projects")
@@ -49,6 +59,8 @@ export interface ProjectWithPages extends Project {
 type PageRecommendationsEmbed = Page & { recommendations: { id: string; status: RecommendationStatus }[] };
 
 export async function getProjectWithPages(projectId: string): Promise<ProjectWithPages | null> {
+  if (DEMO_MODE) return getProjectWithPagesData(projectId);
+
   const supabase = createClient();
   const { data: project, error } = await supabase.from("projects").select("*").eq("id", projectId).single();
   if (error || !project) return null;
@@ -79,6 +91,8 @@ export interface PageWithRecommendations extends Page {
 type PageWithProjectEmbed = Page & { project: Project };
 
 export async function getPageWithRecommendations(pageId: string): Promise<PageWithRecommendations | null> {
+  if (DEMO_MODE) return getPageWithRecommendationsData(pageId);
+
   const supabase = createClient();
   const { data: page, error } = await supabase
     .from("pages")
@@ -108,6 +122,8 @@ export interface ProjectForExport {
 }
 
 export async function getProjectForExport(projectId: string): Promise<ProjectForExport | null> {
+  if (DEMO_MODE) return getProjectForExportData(projectId);
+
   const supabase = createClient();
   const { data: project } = await supabase.from("projects").select("*").eq("id", projectId).single();
   if (!project) return null;
@@ -127,6 +143,8 @@ export interface ProjectByShareToken {
 }
 
 export async function getProjectByShareToken(shareToken: string): Promise<ProjectByShareToken | null> {
+  if (DEMO_MODE) return getProjectByShareTokenData(shareToken);
+
   const supabase = createServiceRoleClient();
   const { data: project } = await supabase.from("projects").select("*").eq("share_token", shareToken).single();
   if (!project) return null;
