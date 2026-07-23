@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MapPin, Plus } from "lucide-react";
+import { Loader2, MapPin, Plus, Sparkles } from "lucide-react";
 
 import {
   createAnnotation,
@@ -14,11 +14,14 @@ import {
   updateRecommendationStatus,
   type RecommendationInput,
 } from "@/app/(app)/projects/[projectId]/pages/[pageId]/actions";
+import { analyzePage } from "@/app/(app)/projects/[projectId]/pages/[pageId]/ai-actions";
+import { AIReviewDialog } from "@/app/(app)/projects/[projectId]/pages/[pageId]/ai-review-dialog";
 import { RecommendationCard } from "@/app/(app)/projects/[projectId]/pages/[pageId]/recommendation-card";
 import { RecommendationFormDialog } from "@/app/(app)/projects/[projectId]/pages/[pageId]/recommendation-form-dialog";
 import { ScreenshotCanvas } from "@/app/(app)/projects/[projectId]/pages/[pageId]/screenshot-canvas";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import type { AISuggestion } from "@/lib/ai/analyze-page";
 import type { Annotation, Recommendation, RecommendationStatus } from "@/lib/supabase/database.types";
 
 interface Props {
@@ -48,6 +51,10 @@ export function ReviewWorkspace({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingRecommendation, setEditingRecommendation] = useState<Recommendation | null>(null);
   const [selectedRecommendationId, setSelectedRecommendationId] = useState<string | null>(null);
+
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState<AISuggestion[]>([]);
 
   const pins = useMemo(
     () =>
@@ -134,6 +141,41 @@ export function ReviewWorkspace({
       ?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
+  async function handleAnalyze() {
+    setIsAnalyzing(true);
+    try {
+      const suggestions = await analyzePage(pageId);
+      if (suggestions.length === 0) {
+        toast({ title: "No suggestions found", description: "Try again, or add recommendations manually." });
+        return;
+      }
+      setAiSuggestions(suggestions);
+      setAiDialogOpen(true);
+    } catch (err) {
+      handleError(err);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }
+
+  async function handleConfirmAISuggestions(selected: AISuggestion[]) {
+    for (const s of selected) {
+      const created = await createRecommendation(pageId, {
+        sectionName: s.section_name,
+        category: s.category,
+        priority: s.priority,
+        currentContent: s.current_content,
+        seoIssue: s.seo_issue,
+        recommendedContent: s.recommended_content,
+        seoReason: s.seo_reason,
+        expectedBenefit: s.expected_benefit,
+        status: "Draft",
+      });
+      setRecommendations((prev) => [...prev, created]);
+    }
+    router.refresh();
+  }
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex shrink-0 items-center justify-between border-b border-border px-6 py-3">
@@ -141,17 +183,23 @@ export function ReviewWorkspace({
           <p className="text-sm font-medium">{pageName}</p>
           <p className="text-xs text-muted-foreground">Split-screen review workspace</p>
         </div>
-        <Button
-          variant={addPinMode ? "secondary" : "outline"}
-          size="sm"
-          onClick={() => {
-            setPinTargetRecommendationId(null);
-            setAddPinMode((v) => !v);
-          }}
-        >
-          <MapPin className="h-4 w-4" />
-          {addPinMode ? "Placing pin…" : "Add pin + recommendation"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleAnalyze} disabled={isAnalyzing}>
+            {isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            {isAnalyzing ? "Analyzing…" : "Analyze with AI"}
+          </Button>
+          <Button
+            variant={addPinMode ? "secondary" : "outline"}
+            size="sm"
+            onClick={() => {
+              setPinTargetRecommendationId(null);
+              setAddPinMode((v) => !v);
+            }}
+          >
+            <MapPin className="h-4 w-4" />
+            {addPinMode ? "Placing pin…" : "Add pin + recommendation"}
+          </Button>
+        </div>
       </div>
 
       <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-2">
@@ -226,6 +274,13 @@ export function ReviewWorkspace({
         initial={editingRecommendation}
         onSubmit={editingRecommendation ? handleUpdate : handleCreate}
         onCancel={() => setPendingPosition(null)}
+      />
+
+      <AIReviewDialog
+        open={aiDialogOpen}
+        onOpenChange={setAiDialogOpen}
+        suggestions={aiSuggestions}
+        onConfirm={handleConfirmAISuggestions}
       />
     </div>
   );

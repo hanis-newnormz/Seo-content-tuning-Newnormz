@@ -53,6 +53,11 @@ follow the setup steps below.
    where clients can approve, request changes, and comment.
 8. **Dashboard** — projects, pages reviewed, recommendations, approval progress.
 9. **PDF export** — a shareable report with a cover page and one section per recommendation.
+10. **Analyze with AI** — a button in the review workspace that sends the page's screenshot, URL, and
+    target keywords to Claude and proposes draft recommendations (section, issue, current vs.
+    recommended content, reason, priority, category) for your team to review, edit, and select before
+    adding them as real recommendation cards. Requires `ANTHROPIC_API_KEY` (optional — the rest of the
+    app works without it).
 
 ## Getting started
 
@@ -81,10 +86,16 @@ cp .env.local.example .env.local
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
+ANTHROPIC_API_KEY=
 ```
 
 `SUPABASE_SERVICE_ROLE_KEY` is used **only** in server-only code (`src/lib/supabase/server.ts`'s
 `createServiceRoleClient`, used by the public client-view pages) — never expose it to the browser.
+
+`ANTHROPIC_API_KEY` is optional — it only powers the "Analyze with AI" button
+(`src/lib/ai/analyze-page.ts`). Get a key at
+[console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys). Without it, that
+button will show an error toast but the rest of the app works normally.
 
 ### 3. Create your first agency user
 
