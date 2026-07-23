@@ -15,6 +15,7 @@ import {
   type RecommendationInput,
 } from "@/app/(app)/projects/[projectId]/pages/[pageId]/actions";
 import { analyzePage } from "@/app/(app)/projects/[projectId]/pages/[pageId]/ai-actions";
+import { AIAnalyzeStartDialog } from "@/app/(app)/projects/[projectId]/pages/[pageId]/ai-analyze-start-dialog";
 import { AIReviewDialog } from "@/app/(app)/projects/[projectId]/pages/[pageId]/ai-review-dialog";
 import { RecommendationCard } from "@/app/(app)/projects/[projectId]/pages/[pageId]/recommendation-card";
 import { RecommendationFormDialog } from "@/app/(app)/projects/[projectId]/pages/[pageId]/recommendation-form-dialog";
@@ -53,6 +54,7 @@ export function ReviewWorkspace({
   const [selectedRecommendationId, setSelectedRecommendationId] = useState<string | null>(null);
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [aiStartDialogOpen, setAiStartDialogOpen] = useState(false);
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<AISuggestion[]>([]);
 
@@ -141,15 +143,16 @@ export function ReviewWorkspace({
       ?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
-  async function handleAnalyze() {
+  async function handleAnalyze(competitorUrl: string) {
     setIsAnalyzing(true);
     try {
-      const suggestions = await analyzePage(pageId);
+      const suggestions = await analyzePage(pageId, competitorUrl);
       if (suggestions.length === 0) {
         toast({ title: "No suggestions found", description: "Try again, or add recommendations manually." });
         return;
       }
       setAiSuggestions(suggestions);
+      setAiStartDialogOpen(false);
       setAiDialogOpen(true);
     } catch (err) {
       handleError(err);
@@ -184,7 +187,7 @@ export function ReviewWorkspace({
           <p className="text-xs text-muted-foreground">Split-screen review workspace</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleAnalyze} disabled={isAnalyzing}>
+          <Button variant="outline" size="sm" onClick={() => setAiStartDialogOpen(true)} disabled={isAnalyzing}>
             {isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
             {isAnalyzing ? "Analyzing…" : "Analyze with AI"}
           </Button>
@@ -274,6 +277,13 @@ export function ReviewWorkspace({
         initial={editingRecommendation}
         onSubmit={editingRecommendation ? handleUpdate : handleCreate}
         onCancel={() => setPendingPosition(null)}
+      />
+
+      <AIAnalyzeStartDialog
+        open={aiStartDialogOpen}
+        onOpenChange={setAiStartDialogOpen}
+        isAnalyzing={isAnalyzing}
+        onStart={handleAnalyze}
       />
 
       <AIReviewDialog
