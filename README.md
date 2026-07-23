@@ -9,9 +9,11 @@ a review, presentation, and approval tool: upload a screenshot of a page, pin
 recommendations directly onto it, and share a client-facing link where the
 client can approve, request changes, or comment.
 
-## Demo mode (default, for now)
+## Demo mode
 
-`DEMO_MODE` in [`src/lib/demo/config.ts`](./src/lib/demo/config.ts) is currently `true`. While it's on:
+`DEMO_MODE` in [`src/lib/demo/config.ts`](./src/lib/demo/config.ts) is currently `false` — the app
+talks to a real Supabase project. Flip it to `true` any time you want to preview the interface
+without a backend. While it's on:
 
 - **No Supabase project or environment variables are required.** Auth, storage, and the database
   are all replaced by an in-memory store (`src/lib/demo/store.ts`) seeded with two sample projects
