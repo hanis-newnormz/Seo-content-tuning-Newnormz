@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 210 40% 98%;
+  --foreground: 222 47% 11%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+
+  --primary: 231 48% 32%;
+  --primary-foreground: 210 40% 98%;
+
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222 47% 11%;
+
+  --muted: 210 30% 95%;
+  --muted-foreground: 215 16% 47%;
+
+  --accent: 172 66% 40%;
+  --accent-foreground: 210 40% 98%;
+
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 210 40% 98%;
+
+  --success: 152 60% 36%;
+  --success-foreground: 210 40% 98%;
+
+  --warning: 32 95% 48%;
+  --warning-foreground: 210 40% 98%;
+
+  --border: 214 30% 90%;
+  --input: 214 30% 90%;
+  --ring: 231 48% 32%;
+
+  --radius: 0.75rem;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+.dark {
+  --background: 222 47% 8%;
+  --foreground: 210 40% 98%;
+
+  --card: 222 40% 11%;
+  --card-foreground: 210 40% 98%;
+
+  --popover: 222 40% 11%;
+  --popover-foreground: 210 40% 98%;
+
+  --primary: 231 60% 68%;
+  --primary-foreground: 222 47% 11%;
+
+  --secondary: 222 30% 16%;
+  --secondary-foreground: 210 40% 98%;
+
+  --muted: 222 30% 16%;
+  --muted-foreground: 215 20% 65%;
+
+  --accent: 172 55% 45%;
+  --accent-foreground: 222 47% 11%;
+
+  --destructive: 0 62% 55%;
+  --destructive-foreground: 210 40% 98%;
+
+  --success: 152 50% 45%;
+  --success-foreground: 210 40% 98%;
+
+  --warning: 32 90% 55%;
+  --warning-foreground: 210 40% 98%;
+
+  --border: 222 25% 20%;
+  --input: 222 25% 20%;
+  --ring: 231 60% 68%;
+}
+
+* {
+  @apply border-border;
+}
+
+body {
+  @apply bg-background text-foreground;
+  font-feature-settings:
+    "rlig" 1,
+    "calt" 1;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+}
