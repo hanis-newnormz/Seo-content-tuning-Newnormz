@@ -7,6 +7,11 @@ import { Progress } from "@/components/ui/progress";
 import { getProjectByShareToken } from "@/lib/data";
 import type { Annotation, Comment, Page, Recommendation } from "@/lib/supabase/database.types";
 
+// This page is fetched with the Supabase service-role client, which never calls
+// a Next.js dynamic API (cookies/headers) — without this, Next can cache the
+// first render indefinitely and never pick up status changes made afterward.
+export const dynamic = "force-dynamic";
+
 interface PageRow extends Page {
   recommendations: (Recommendation & { annotations: Annotation[]; comments: Comment[] })[];
 }
